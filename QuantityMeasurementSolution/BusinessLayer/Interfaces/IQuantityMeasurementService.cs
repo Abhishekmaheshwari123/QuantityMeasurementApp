@@ -1,4 +1,5 @@
 using ModelLayer.DTOs;
+using ModelLayer.Entities;
 
 namespace BusinessLayer.Interfaces
 {
@@ -19,5 +20,13 @@ namespace BusinessLayer.Interfaces
             string? targetUnit = null);
 
         double Divide(QuantityDto firstQuantity, QuantityDto secondQuantity);
+
+        IReadOnlyList<QuantityMeasurementEntity> GetHistoryByOperation(string operation);
+
+        IReadOnlyList<QuantityMeasurementEntity> GetHistoryByMeasurementType(string measurementType);
+
+        IReadOnlyList<QuantityMeasurementEntity> GetErroredHistory();
+
+        int GetOperationCount(string operation);
     }
 }
