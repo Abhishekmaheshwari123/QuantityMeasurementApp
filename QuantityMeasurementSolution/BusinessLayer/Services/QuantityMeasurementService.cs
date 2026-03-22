@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using ModelLayer.DTOs;
 using ModelLayer.Entities;
 using QuantityMeasurement.Domain.Enums;
@@ -195,6 +197,41 @@ namespace BusinessLayer.Services
             {
                 throw CreateAndStoreFailure("DIVIDE", firstQuantity, secondQuantity, ex);
             }
+        }
+
+        public IReadOnlyList<QuantityMeasurementEntity> GetHistoryByOperation(string operation)
+        {
+            if (string.IsNullOrWhiteSpace(operation))
+                throw new QuantityMeasurementException("Operation is required.");
+
+            return _repository.GetMeasurementsByOperation(operation.Trim());
+        }
+
+        public IReadOnlyList<QuantityMeasurementEntity> GetHistoryByMeasurementType(string measurementType)
+        {
+            if (string.IsNullOrWhiteSpace(measurementType))
+                throw new QuantityMeasurementException("Measurement type is required.");
+
+            return _repository.GetMeasurementsByMeasurementType(measurementType.Trim());
+        }
+
+        public IReadOnlyList<QuantityMeasurementEntity> GetErroredHistory()
+        {
+            return _repository
+                .GetAllMeasurements()
+                .Where(x => !x.IsSuccess)
+                .ToList()
+                .AsReadOnly();
+        }
+
+        public int GetOperationCount(string operation)
+        {
+            if (string.IsNullOrWhiteSpace(operation))
+                throw new QuantityMeasurementException("Operation is required.");
+
+            return _repository
+                .GetMeasurementsByOperation(operation.Trim())
+                .Count(x => x.IsSuccess);
         }
 
         private static bool CompareInternal<TUnit>(QuantityDto first, QuantityDto second)
