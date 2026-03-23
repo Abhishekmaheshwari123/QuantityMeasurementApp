@@ -52,6 +52,19 @@ CREATE TABLE dbo.QuantityMeasurementHistory
 );
 GO
 
+CREATE TRIGGER dbo.trg_QuantityMeasurements_InsertHistory
+ON dbo.QuantityMeasurements
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.QuantityMeasurementHistory (MeasurementId, ActionType)
+    SELECT i.Id, 'INSERT'
+    FROM inserted i;
+END;
+GO
+
 CREATE INDEX IX_QuantityMeasurements_Operation
 ON dbo.QuantityMeasurements(Operation);
 GO

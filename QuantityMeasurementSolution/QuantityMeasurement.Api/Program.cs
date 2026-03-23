@@ -1,14 +1,10 @@
 using BusinessLayer.Interfaces;
 using BusinessLayer.Services;
-using Microsoft.AspNetCore.Mvc;
-using QuantityMeasurement.Api.Contracts;
-using QuantityMeasurement.Api.Middleware;
-using QuantityMeasurement.Domain.Services;
-using RepositoryLayer.Configuration;
+using Microsoft.EntityFrameworkCore;
+using QuantityMeasurement.RepositoryLayer.Data;
+using QuantityMeasurement.RepositoryLayer.Repositories;
 using RepositoryLayer.Interfaces;
-using RepositoryLayer.Repositories;
-
-// using QuantityMeasurement.Infrastructure.Repositories;
+using QuantityMeasurement.Domain.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,62 +12,34 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.Configure<ApiBehaviorOptions>(options =>
+builder.Services.AddCors(options =>
 {
-    options.InvalidModelStateResponseFactory = context =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        string message = string.Join(
-            ", ",
-            context
-                .ModelState.Values.SelectMany(v => v.Errors)
-                .Select(e =>
-                    string.IsNullOrWhiteSpace(e.ErrorMessage) ? "Invalid request." : e.ErrorMessage
-                )
-        );
-
-        var errorResponse = new ApiErrorResponse
-        {
-            Status = StatusCodes.Status400BadRequest,
-            Error = "Validation Error",
-            Message = string.IsNullOrWhiteSpace(message) ? "Request validation failed." : message,
-            Path = context.HttpContext.Request.Path,
-        };
-
-        return new BadRequestObjectResult(errorResponse);
-    };
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
 });
 
-builder.Services.AddSingleton<IQuantityMeasurementRepository>(sp =>
-{
-    var configuration = sp.GetRequiredService<IConfiguration>();
-    string provider = configuration["Repository:Provider"] ?? "Cache";
 
-    if (string.Equals(provider, "Database", StringComparison.OrdinalIgnoreCase))
-    {
-        string? connectionString =
-            configuration.GetConnectionString("DefaultConnection")
-            ?? configuration["Repository:ConnectionString"];
+var connectionString = builder.Configuration.GetConnectionString("QuantityMeasurementDb")
+    ?? throw new InvalidOperationException("Connection string 'QuantityMeasurementDb' is missing.");
 
-        if (!string.IsNullOrWhiteSpace(connectionString))
-        {
-            return new QuantityMeasurementDatabaseRepository(new DatabaseConfig(connectionString));
-        }
-    }
+builder.Services.AddDbContext<QuantityMeasurementDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
-    return new QuantityMeasurementCacheRepository();
-});
+builder.Services.AddScoped<IQuantityMeasurementRepository, QuantityMeasurementOrmRepository>();
 
 builder.Services.AddScoped<IQuantityMeasurementService, QuantityMeasurementService>();
 
 var app = builder.Build();
-
+app.UseCors("AllowFrontend");
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.MapControllers();
 
 app.Run();
-
-public partial class Program { }
