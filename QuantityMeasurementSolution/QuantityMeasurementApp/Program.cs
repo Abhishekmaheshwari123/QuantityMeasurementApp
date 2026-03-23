@@ -24,7 +24,7 @@ namespace QuantityMeasurementApp
             IQuantityMeasurementService service = new QuantityMeasurementService(repository);
             var controller = new QuantityMeasurementController(service);
 
-            Console.WriteLine("=== Quantity Measurement Application (UC16) ===");
+            Console.WriteLine("=== Quantity Measurement Application (UC16 + UC17 API) ===");
             Console.WriteLine($"Repository: {repository.GetRepositoryInfo()}");
             Console.WriteLine($"Pool Info: {repository.GetPoolStatistics()}");
             Console.WriteLine();

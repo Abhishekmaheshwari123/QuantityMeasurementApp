@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using BusinessLayer.Interfaces;
-using BusinessLayer.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ModelLayer.DTOs;
-using ModelLayer.Entities;
+using QuantityMeasurement.Domain.DTOs;
+using QuantityMeasurement.Domain.Entities;
 using QuantityMeasurement.Domain.Enums;
 using QuantityMeasurement.Domain.Exceptions;
-using RepositoryLayer.Interfaces;
+using QuantityMeasurement.Domain.Interfaces;
+using QuantityMeasurement.Domain.Services;
 
 namespace QuantityMeasurement.Tests
 {
@@ -120,31 +119,6 @@ namespace QuantityMeasurement.Tests
             public IReadOnlyList<QuantityMeasurementEntity> GetAllMeasurements()
             {
                 return _items.AsReadOnly();
-            }
-
-            public IReadOnlyList<QuantityMeasurementEntity> GetMeasurementsByOperation(string operation)
-            {
-                return _items.FindAll(x => string.Equals(x.Operation, operation, StringComparison.OrdinalIgnoreCase)).AsReadOnly();
-            }
-
-            public IReadOnlyList<QuantityMeasurementEntity> GetMeasurementsByMeasurementType(string measurementType)
-            {
-                return _items.FindAll(x => string.Equals(x.FirstMeasurementType, measurementType, StringComparison.OrdinalIgnoreCase)).AsReadOnly();
-            }
-
-            public int GetTotalCount()
-            {
-                return _items.Count;
-            }
-
-            public void DeleteAll()
-            {
-                _items.Clear();
-            }
-
-            public string GetRepositoryInfo()
-            {
-                return "In-memory test repository";
             }
         }
     }
