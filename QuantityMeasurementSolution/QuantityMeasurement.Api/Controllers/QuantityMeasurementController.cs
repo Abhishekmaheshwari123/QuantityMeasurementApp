@@ -1,8 +1,8 @@
-using BusinessLayer.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using ModelLayer.DTOs;
-using ModelLayer.Entities;
 using QuantityMeasurement.Api.Contracts;
+using ModelLayer.DTOs;
+using BusinessLayer.Interfaces;
+using QuantityMeasurement.Domain.Exceptions;
 
 namespace QuantityMeasurement.Api.Controllers
 {
@@ -20,164 +20,157 @@ namespace QuantityMeasurement.Api.Controllers
         [HttpPost("compare")]
         public ActionResult<ApiResponse<bool>> Compare([FromBody] CompareRequest request)
         {
-            bool result = _quantityMeasurementService.Compare(
-                MapToDto(request.FirstQuantity),
-                MapToDto(request.SecondQuantity)
-            );
+            try
+            {
+                bool result = _quantityMeasurementService.Compare(
+                    MapToDto(request.FirstQuantity),
+                    MapToDto(request.SecondQuantity));
 
-            return Ok(
-                new ApiResponse<bool>
+                return Ok(new ApiResponse<bool>
                 {
                     Success = true,
                     Message = "Comparison completed successfully.",
-                    Data = result,
-                }
-            );
+                    Data = result
+                });
+            }
+            catch (QuantityMeasurementException ex)
+            {
+                return BadRequest(new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    Data = false
+                });
+            }
         }
 
         [HttpPost("convert")]
         public ActionResult<ApiResponse<QuantityDto>> Convert([FromBody] ConvertRequest request)
         {
-            var result = _quantityMeasurementService.Convert(
-                MapToDto(request.SourceQuantity),
-                request.TargetUnit
-            );
+            try
+            {
+                var result = _quantityMeasurementService.Convert(
+                    MapToDto(request.SourceQuantity),
+                    request.TargetUnit);
 
-            return Ok(
-                new ApiResponse<QuantityDto>
+                return Ok(new ApiResponse<QuantityDto>
                 {
                     Success = true,
                     Message = "Conversion completed successfully.",
-                    Data = result,
-                }
-            );
+                    Data = result
+                });
+            }
+            catch (QuantityMeasurementException ex)
+            {
+                return BadRequest(new ApiResponse<QuantityDto>
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    Data = null
+                });
+            }
         }
 
         [HttpPost("add")]
         public ActionResult<ApiResponse<QuantityDto>> Add([FromBody] ArithmeticRequest request)
         {
-            var result = _quantityMeasurementService.Add(
-                MapToDto(request.FirstQuantity),
-                MapToDto(request.SecondQuantity),
-                request.TargetUnit
-            );
+            try
+            {
+                var result = _quantityMeasurementService.Add(
+                    MapToDto(request.FirstQuantity),
+                    MapToDto(request.SecondQuantity),
+                    request.TargetUnit);
 
-            return Ok(
-                new ApiResponse<QuantityDto>
+                return Ok(new ApiResponse<QuantityDto>
                 {
                     Success = true,
                     Message = "Addition completed successfully.",
-                    Data = result,
-                }
-            );
+                    Data = result
+                });
+            }
+            catch (QuantityMeasurementException ex)
+            {
+                return BadRequest(new ApiResponse<QuantityDto>
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    Data = null
+                });
+            }
         }
 
         [HttpPost("subtract")]
         public ActionResult<ApiResponse<QuantityDto>> Subtract([FromBody] ArithmeticRequest request)
         {
-            var result = _quantityMeasurementService.Subtract(
-                MapToDto(request.FirstQuantity),
-                MapToDto(request.SecondQuantity),
-                request.TargetUnit
-            );
+            try
+            {
+                var result = _quantityMeasurementService.Subtract(
+                    MapToDto(request.FirstQuantity),
+                    MapToDto(request.SecondQuantity),
+                    request.TargetUnit);
 
-            return Ok(
-                new ApiResponse<QuantityDto>
+                return Ok(new ApiResponse<QuantityDto>
                 {
                     Success = true,
                     Message = "Subtraction completed successfully.",
-                    Data = result,
-                }
-            );
+                    Data = result
+                });
+            }
+            catch (QuantityMeasurementException ex)
+            {
+                return BadRequest(new ApiResponse<QuantityDto>
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    Data = null
+                });
+            }
         }
 
         [HttpPost("divide")]
         public ActionResult<ApiResponse<double>> Divide([FromBody] ArithmeticRequest request)
         {
-            double result = _quantityMeasurementService.Divide(
-                MapToDto(request.FirstQuantity),
-                MapToDto(request.SecondQuantity)
-            );
+            try
+            {
+                double result = _quantityMeasurementService.Divide(
+                    MapToDto(request.FirstQuantity),
+                    MapToDto(request.SecondQuantity));
 
-            return Ok(
-                new ApiResponse<double>
+                return Ok(new ApiResponse<double>
                 {
                     Success = true,
                     Message = "Division completed successfully.",
-                    Data = result,
-                }
-            );
+                    Data = result
+                });
+            }
+            catch (QuantityMeasurementException ex)
+            {
+                return BadRequest(new ApiResponse<double>
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    Data = 0
+                });
+            }
         }
 
-        [HttpGet("history/operation/{operation}")]
-        public ActionResult<
-            ApiResponse<IReadOnlyList<QuantityMeasurementEntity>>
-        > GetHistoryByOperation(string operation)
+        [HttpGet("health")]
+        public ActionResult<ApiResponse<string>> Health()
         {
-            var items = _quantityMeasurementService.GetHistoryByOperation(operation);
-
-            return Ok(
-                new ApiResponse<IReadOnlyList<QuantityMeasurementEntity>>
-                {
-                    Success = true,
-                    Message = "Operation history retrieved successfully.",
-                    Data = items,
-                }
-            );
-        }
-
-        [HttpGet("history/type/{measurementType}")]
-        public ActionResult<
-            ApiResponse<IReadOnlyList<QuantityMeasurementEntity>>
-        > GetHistoryByMeasurementType(string measurementType)
-        {
-            var items = _quantityMeasurementService.GetHistoryByMeasurementType(measurementType);
-
-            return Ok(
-                new ApiResponse<IReadOnlyList<QuantityMeasurementEntity>>
-                {
-                    Success = true,
-                    Message = "Measurement type history retrieved successfully.",
-                    Data = items,
-                }
-            );
-        }
-
-        [HttpGet("history/errored")]
-        public ActionResult<
-            ApiResponse<IReadOnlyList<QuantityMeasurementEntity>>
-        > GetErroredHistory()
-        {
-            var items = _quantityMeasurementService.GetErroredHistory();
-
-            return Ok(
-                new ApiResponse<IReadOnlyList<QuantityMeasurementEntity>>
-                {
-                    Success = true,
-                    Message = "Errored history retrieved successfully.",
-                    Data = items,
-                }
-            );
-        }
-
-        [HttpGet("count/{operation}")]
-        public ActionResult<ApiResponse<int>> GetOperationCount(string operation)
-        {
-            int count = _quantityMeasurementService.GetOperationCount(operation);
-
-            return Ok(
-                new ApiResponse<int>
-                {
-                    Success = true,
-                    Message = "Operation count retrieved successfully.",
-                    Data = count,
-                }
-            );
+            return Ok(new ApiResponse<string>
+            {
+                Success = true,
+                Message = "Service is healthy.",
+                Data = "OK"
+            });
         }
 
         private static QuantityDto MapToDto(QuantityRequest request)
         {
-            return new QuantityDto(request.Value, request.Unit, request.MeasurementType);
+            return new QuantityDto(
+                request.Value,
+                request.Unit,
+                request.MeasurementType);
         }
     }
 }
