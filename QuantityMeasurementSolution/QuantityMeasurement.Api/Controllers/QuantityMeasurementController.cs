@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using QuantityMeasurement.Api.Contracts;
 using ModelLayer.DTOs;
 using BusinessLayer.Interfaces;
@@ -6,8 +7,12 @@ using QuantityMeasurement.Domain.Exceptions;
 
 namespace QuantityMeasurement.Api.Controllers
 {
+    /// <summary>
+    /// Quantity measurement operations; endpoints require authentication except health check.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public sealed class QuantityMeasurementController : ControllerBase
     {
         private readonly IQuantityMeasurementService _quantityMeasurementService;
@@ -155,6 +160,7 @@ namespace QuantityMeasurement.Api.Controllers
         }
 
         [HttpGet("health")]
+        [AllowAnonymous]
         public ActionResult<ApiResponse<string>> Health()
         {
             return Ok(new ApiResponse<string>
