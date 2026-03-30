@@ -1,82 +1,158 @@
 # Quantity Measurement Application
 
-Build, compare, convert, and calculate quantities across multiple measurement categories using a layered .NET solution.
+Layered .NET 8 solution for quantity comparison, conversion, arithmetic, authentication, and persistence.
 
-The codebase started with the UC1 feet-equality requirement and has grown into a reusable quantity-measurement application with:
+The project supports:
 
-- Generic quantity modeling through `Quantity<TUnit>`
-- Multiple categories: length, weight, volume, and temperature
-- Console and ASP.NET Core API entry points
-- MSTest coverage for domain and service behavior
-- Optional persistence through an in-memory repository or SQL Server via ADO.NET
+- Length, weight, volume, and temperature measurements
+- Compare, convert, add, subtract, and divide operations
+- Console app workflow and ASP.NET Core Web API
+- JWT-based authentication for protected quantity endpoints
+- Repository implementations for cache, ADO.NET SQL, and EF Core ORM
+- MSTest coverage across domain and business scenarios
 
-## What The Application Supports
+## Supported Measurement Types
 
-- Compare quantities across equivalent units
-- Convert quantities into a target unit
-- Add and subtract compatible quantities
-- Divide compatible quantities to produce ratios
-- Restrict unsupported arithmetic on absolute temperatures
-- Persist measurement history through the repository layer
+- Length: `Feet`, `Inches`, `Yards`, `Centimeters`
+- Weight: `Gram`, `Kilogram`, `Pound`, `Tonne`
+- Volume: `Litre`, `Millilitre`, `Gallon`
+- Temperature: `Celsius`, `Fahrenheit`, `Kelvin`
 
-## Supported Units
+Temperature supports comparison and conversion. Arithmetic operations on temperature are blocked by domain rules.
 
-- Length: Feet, Inches, Yards, Centimeters
-- Weight: Gram, Kilogram, Pound, Tonne
-- Volume: Litre, Millilitre, Gallon
-- Temperature: Celsius, Fahrenheit, Kelvin
-
-Temperature supports comparison and conversion. Arithmetic on temperatures is intentionally rejected by the domain rules.
-
-## Repository Layout
-
-The repository currently contains both the active solution projects and supporting layer projects referenced by the app and API.
+## Full Repository Structure
 
 ```text
+QuantityMeasurementApp.sln
+README.md
 QuantityMeasurementSolution/
+|- QuantityMeasurementDb.sql
 |- QuantityMeasurementSolution.slnx
-|- QuantityMeasurement.Domain/            Domain units, value objects, exceptions, services
-|- QuantityMeasurement.Infrastructure/    Infrastructure project referenced by the API
-|- QuantityMeasurement.Tests/             MSTest test suite
-|- QuantityMeasurementApp/                Console application
-|- QuantityMeasurement.Api/               ASP.NET Core Web API
-|- BusinessLayer/                         Application/service layer used by app and API
-|- ModelLayer/                            DTOs, entities, and models
-|- RepositoryLayer/                       In-memory and SQL Server repository implementations
-`- QuantityMeasurementDb.sql              SQL Server schema setup script
+|- BusinessLayer/
+|  |- Interfaces/
+|  |  |- IAuthService.cs
+|  |  `- IQuantityMeasurementService.cs
+|  `- Services/
+|     |- AuthService.cs
+|     `- QuantityMeasurementService.cs
+|- ModelLayer/
+|  |- DTOs/
+|  |- Entities/
+|  `- Models/
+|- RepositoryLayer/
+|  |- Configuration/
+|  |- Data/
+|  |- Interfaces/
+|  |- Migrations/
+|  `- Repositories/
+|- QuantityMeasurement.Domain/
+|  |- Enums/
+|  |- Exceptions/
+|  |- Services/
+|  `- ValueObjects/
+|- QuantityMeasurement.Api/
+|  |- Contracts/
+|  `- Controllers/
+|- QuantityMeasurementApp/
+|  |- Configuration/
+|  `- Controllers/
+`- QuantityMeasurement.Tests/
 ```
 
-## Runtime Behavior
+## Architecture (Project-by-Project)
 
-- Console app: configured to use the SQL Server repository by default
-- Web API: currently configured to use the in-memory cache repository
-- Repository abstraction: supports saving measurements, querying history, counting records, clearing records, and releasing resources
+1. `QuantityMeasurement.Domain`
+	- Core business rules, units, value objects, conversion and arithmetic logic.
+2. `ModelLayer`
+	- Shared DTOs, entities, and models used across layers.
+3. `RepositoryLayer`
+	- Persistence and data access (`Cache`, `Database` with ADO.NET, `ORM` with EF Core), DbContext, and migrations.
+4. `BusinessLayer`
+	- Application services (`IQuantityMeasurementService`, `IAuthService`) orchestrating domain + repository calls.
+5. `QuantityMeasurement.Api`
+	- ASP.NET Core API with JWT auth, swagger, controllers, and request/response contracts.
+6. `QuantityMeasurementApp`
+	- Console client for interactive quantity operations.
+7. `QuantityMeasurement.Tests`
+	- MSTest suite for generic quantity logic, advanced operations, UC scenarios, and service behavior.
 
-This means the console app requires a working SQL Server database unless you change its startup configuration.
+## Solutions in This Repository
+
+- `QuantityMeasurementApp.sln`
+  - Main Visual Studio solution that includes all layer projects.
+- `QuantityMeasurementSolution/QuantityMeasurementSolution.slnx`
+  - Slim solution containing domain, tests, API, and console app.
+
+Use either solution based on your workflow. For full-layer development, prefer `QuantityMeasurementApp.sln`.
+
+## Tech Stack
+
+- .NET 8 (`net8.0`)
+- ASP.NET Core Web API
+- Entity Framework Core (SQL Server)
+- ADO.NET (`Microsoft.Data.SqlClient`)
+- JWT Bearer Authentication
+- MSTest
 
 ## Prerequisites
 
-- .NET 10 SDK
-- SQL Server instance if you want to run the console app with the default configuration
+- .NET 8 SDK
+- SQL Server (for database-backed modes)
+- Optional: Visual Studio 2022 / VS Code + C# extension
 
-The console app currently uses this local SQL Server target:
+## Configuration
+
+### API Configuration
+
+API settings live in `QuantityMeasurementSolution/QuantityMeasurement.Api/appsettings.json`:
+
+- `ConnectionStrings:QuantityMeasurementDb`
+- `Jwt:Key`, `Jwt:Issuer`, `Jwt:Audience`, `Jwt:ExpiryMinutes`
+
+Replace the default JWT key with a secure secret before real use.
+
+### Console Configuration
+
+Console defaults are configured in `QuantityMeasurementSolution/QuantityMeasurementApp/Program.cs`:
+
+- `useDatabaseRepository: true`
+- Connection string:
 
 ```text
 Server=localhost,1433;Database=QuantityMeasurementDb;User Id=sa;Password=Admin@123;TrustServerCertificate=True;
 ```
 
-If your SQL Server runs elsewhere, update the connection string in `QuantityMeasurementSolution/QuantityMeasurementApp/Program.cs` before running the console application.
+If you do not want SQL persistence in console mode, set `useDatabaseRepository: false`.
 
-If you do not want to use SQL Server, set `useDatabaseRepository: false` in the `ApplicationConfig` created in `QuantityMeasurementSolution/QuantityMeasurementApp/Program.cs`.
+## Database Setup
 
-## Quick Start
+There are two supported database paths:
 
-Run commands from the repository root.
+1. SQL script (ADO.NET / manual setup)
+	- Run `QuantityMeasurementSolution/QuantityMeasurementDb.sql`.
+2. EF Core migrations (ORM / API startup)
+	- API startup applies pending migrations automatically via `Database.Migrate()`.
+
+The SQL script creates:
+
+- `dbo.QuantityMeasurements`
+- `dbo.QuantityMeasurementHistory`
+- Insert-history trigger and useful indexes
+
+## Build and Run
+
+Run commands from repository root.
 
 ### Restore
 
 ```bash
-dotnet restore QuantityMeasurementSolution/QuantityMeasurementSolution.slnx
+dotnet restore QuantityMeasurementApp.sln
+```
+
+### Build
+
+```bash
+dotnet build QuantityMeasurementApp.sln
 ```
 
 ### Run Tests
@@ -85,74 +161,113 @@ dotnet restore QuantityMeasurementSolution/QuantityMeasurementSolution.slnx
 dotnet test QuantityMeasurementSolution/QuantityMeasurement.Tests/QuantityMeasurement.Tests.csproj
 ```
 
-### Run The API
+### Run API
 
 ```bash
 dotnet run --project QuantityMeasurementSolution/QuantityMeasurement.Api/QuantityMeasurement.Api.csproj
 ```
 
-Swagger is enabled by default. After the API starts, open the reported `/swagger` URL.
+After startup:
 
-### Run The Console App
+- Swagger UI: `/swagger`
+- Health endpoint: `GET /api/QuantityMeasurement/health`
+
+### Run Console App
 
 ```bash
 dotnet run --project QuantityMeasurementSolution/QuantityMeasurementApp/QuantityMeasurementApp.csproj
 ```
 
-By default, the console app starts with the database repository enabled.
+## API Endpoints
 
-## Database Setup
+Base route: `/api`
 
-Before running the console app with the default configuration, create the database objects from the provided SQL script:
+Authentication (`AllowAnonymous`):
 
-```text
-QuantityMeasurementSolution/QuantityMeasurementDb.sql
-```
+- `POST /api/Auth/signup`
+- `POST /api/Auth/login`
 
-The script creates:
+Quantity operations (`Authorize` required except health):
 
-- `dbo.QuantityMeasurements` for stored operation results
-- `dbo.QuantityMeasurementHistory` for audit-style insert tracking
-- supporting indexes for operation, measurement type, and creation time queries
+- `POST /api/QuantityMeasurement/compare`
+- `POST /api/QuantityMeasurement/convert`
+- `POST /api/QuantityMeasurement/add`
+- `POST /api/QuantityMeasurement/subtract`
+- `POST /api/QuantityMeasurement/divide`
+- `GET /api/QuantityMeasurement/health` (anonymous)
 
-## API Surface
+All API responses are wrapped with `ApiResponse<T>`.
 
-The Web API exposes these endpoints under `/api/QuantityMeasurement`:
+## Repository Modes
 
-- `POST /compare`
-- `POST /convert`
-- `POST /add`
-- `POST /subtract`
-- `POST /divide`
+`RepositoryLayer` contains these implementations:
 
-Requests use transport contracts in `QuantityMeasurement.Api/Contracts`, and responses are wrapped in a standard `ApiResponse<T>` payload.
+- `QuantityMeasurementCacheRepository` (in-memory)
+- `QuantityMeasurementDatabaseRepository` (ADO.NET SQL)
+- `QuantityMeasurementOrmRepository` (EF Core)
 
-## Use Case Coverage
+The API is wired to ORM repository by default (`QuantityMeasurementOrmRepository`).
 
-- [x] UC1: Feet equality comparison
-- [x] UC2: Inches equality and numeric validation
-- [x] UC3: Generic quantity model for length
-- [x] UC4: Added yards and centimeters
-- [x] UC5: Unit-to-unit conversion
-- [x] UC6: Addition across length units
-- [x] UC7: Addition with explicit target unit
-- [x] UC8: Conversion responsibility moved into unit-specific logic
-- [x] UC9: Added weight support
-- [x] UC10: Introduced `Quantity<TUnit>`-based generic handling
-- [x] UC11: Added volume support
-- [x] UC12: Added subtraction and division
-- [x] UC13: Centralized arithmetic logic
-- [x] UC14: Added temperature with selective arithmetic restrictions
-- [x] UC15: Added Web API support
-- [x] UC16: Added SQL Server persistence through ADO.NET
+## Test Coverage
 
-## Testing Focus
+Current test projects/files include:
 
-The test suite covers:
+- `QuantityGenericTests.cs`
+- `QuantityAdvancedOperationsTests.cs`
+- `QuantityUc12Tests.cs`
+- `QuantityMeasurementServiceTests.cs`
 
-- Equality and cross-unit equivalence
-- Conversion accuracy across categories
-- Addition, subtraction, and explicit target-unit behavior
-- Division and divide-by-zero behavior
-- Temperature conversion and unsupported operations
-- Service-layer orchestration behavior
+Coverage focus:
+
+- Equality and cross-unit comparison
+- Conversion accuracy
+- Addition and subtraction across units
+- Division rules and error scenarios
+- Generic quantity behavior
+- Service-level orchestration
+
+## Detailed Use Case Progress (UC1 to UC18)
+
+1. `UC1 - Feet Equality`
+   - Compare two values in feet and return equality result.
+2. `UC2 - Inches Equality and Validation`
+   - Handle inch-based comparisons and basic numeric input handling.
+3. `UC3 - Generic Quantity for Length`
+   - Introduce generic quantity modeling for length units.
+4. `UC4 - Additional Length Units`
+   - Add `Yards` and `Centimeters` to length operations.
+5. `UC5 - Unit Conversion`
+   - Convert source quantity into an explicit target unit.
+6. `UC6 - Addition Across Compatible Units`
+   - Support add operation between equivalent measurement units.
+7. `UC7 - Addition With Target Unit`
+   - Return addition result in caller-selected output unit.
+8. `UC8 - Unit-Specific Conversion Responsibility`
+   - Move conversion behavior into unit/category-specific logic.
+9. `UC9 - Weight Category Support`
+   - Add weight domain support (`Gram`, `Kilogram`, `Pound`, `Tonne`).
+10. `UC10 - Generic Quantity<TUnit> Model`
+	- Standardize multi-category behavior via reusable generic quantity type.
+11. `UC11 - Volume Category Support`
+	- Add volume units (`Litre`, `Millilitre`, `Gallon`) and operations.
+12. `UC12 - Subtraction and Division`
+	- Introduce subtraction and scalar division with validation (for example divide-by-zero guard).
+13. `UC13 - Centralized Arithmetic Logic`
+	- Refactor add/subtract/divide flow into centralized reusable logic while preserving behavior.
+14. `UC14 - Temperature Category`
+	- Add temperature equality/conversion (`Celsius`, `Fahrenheit`, `Kelvin`) and block unsupported temperature arithmetic.
+15. `UC15 - Service Layer Integration`
+	- Expose domain operations through business service abstractions and DTO mapping.
+16. `UC16 - Persistence Layer`
+	- Persist measurement activity through repository layer (cache/database/ORM paths).
+17. `UC17 - Web API Operations`
+	- Provide HTTP endpoints for compare/convert/add/subtract/divide and health check.
+18. `UC18 - Authentication and Protected API`
+	- Add signup/login flow, secure password hashing, JWT issuance, and authorization on quantity endpoints.
+
+This UC mapping reflects the current code organization across domain, business, repository, console, and API projects.
+
+## Notes
+
+- Keep API JWT key and database credentials environment-specific for production.
+- If startup fails with DB errors, verify connection strings and SQL Server accessibility.
