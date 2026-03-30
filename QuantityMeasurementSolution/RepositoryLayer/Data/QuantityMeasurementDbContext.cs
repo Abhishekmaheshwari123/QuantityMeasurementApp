@@ -15,6 +15,8 @@ namespace QuantityMeasurement.RepositoryLayer.Data
 
         public DbSet<QuantityMeasurementRecord> QuantityMeasurements => Set<QuantityMeasurementRecord>();
         public DbSet<QuantityMeasurementHistoryRecord> QuantityMeasurementHistory => Set<QuantityMeasurementHistoryRecord>();
+        // Authentication users used by signup/login endpoints.
+        public DbSet<UserRecord> Users => Set<UserRecord>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,6 +57,25 @@ namespace QuantityMeasurement.RepositoryLayer.Data
                     .WithMany(x => x.HistoryRecords)
                     .HasForeignKey(x => x.MeasurementId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<UserRecord>(entity =>
+            {
+                // Keep auth table separate from quantity operation tables.
+                entity.ToTable("AppUsers", "dbo");
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.FullName).HasMaxLength(100).IsRequired();
+                entity.Property(x => x.Email).HasMaxLength(255).IsRequired();
+                entity.Property(x => x.PasswordHash).HasMaxLength(500).IsRequired();
+
+                entity.Property(x => x.CreatedAtUtc)
+                    .HasColumnType("datetime2")
+                    .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                // One account per email keeps signup/login predictable and secure.
+                entity.HasIndex(x => x.Email)
+                    .IsUnique();
             });
         }
     }
