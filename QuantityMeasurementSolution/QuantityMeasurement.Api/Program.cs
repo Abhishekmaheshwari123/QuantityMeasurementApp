@@ -17,7 +17,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddDefaultPolicy(policy =>
     {
         policy
             .AllowAnyOrigin()
@@ -26,7 +26,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-
+app.UseCors();
 var connectionString = builder.Configuration.GetConnectionString("QuantityMeasurementDb")
     ?? throw new InvalidOperationException("Connection string 'QuantityMeasurementDb' is missing.");
 
