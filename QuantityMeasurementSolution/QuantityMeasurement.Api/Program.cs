@@ -26,7 +26,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-app.UseCors();
+
 var connectionString = builder.Configuration.GetConnectionString("QuantityMeasurementDb")
     ?? throw new InvalidOperationException("Connection string 'QuantityMeasurementDb' is missing.");
 
@@ -65,6 +65,7 @@ builder.Services
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+app.UseCors();
 
 // Apply pending migrations on startup so schema stays aligned with the current model.
 using (var scope = app.Services.CreateScope())
