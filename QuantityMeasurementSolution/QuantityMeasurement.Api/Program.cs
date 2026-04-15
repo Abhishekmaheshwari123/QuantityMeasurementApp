@@ -80,6 +80,7 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 app.UseForwardedHeaders();
+app.UseRouting();
 
 // Apply pending migrations on startup so schema stays aligned with the current model.
 using (var scope = app.Services.CreateScope())
@@ -91,8 +92,6 @@ using (var scope = app.Services.CreateScope())
 app.UseCors("AllowFrontend");
 app.UseSwagger();
 app.UseSwaggerUI();
-
-app.UseHttpsRedirection();
 // Validate incoming bearer tokens before authorization checks.
 app.UseAuthentication();
 app.UseAuthorization();
