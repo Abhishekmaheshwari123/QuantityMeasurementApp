@@ -87,6 +87,13 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// Ensure schema is up to date in deployed environments before serving requests.
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<QuantityMeasurementDbContext>();
+    dbContext.Database.Migrate();
+}
+
 // ✅ IMPORTANT: HANDLE RENDER HEADERS
 app.UseForwardedHeaders();
 
