@@ -26,7 +26,7 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "https://quantitymeasurementapp-frontend-po29.onrender.com",
-                "http://quantitymeasurementapp-frontend-po29.onrender.com"
+                "https://quantitymeasurementapp-frontend-po29.onrender.com"
             )
             .AllowAnyHeader()
             .AllowAnyMethod();
