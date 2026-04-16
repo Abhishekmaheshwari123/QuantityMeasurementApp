@@ -91,6 +91,31 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<QuantityMeasurementDbContext>();
+
+    // If tables were created manually (via SQL script), baseline initial migration
+    // so EF can apply only newer migrations like AppUsers.
+    dbContext.Database.ExecuteSqlRaw(@"
+IF OBJECT_ID(N'[__EFMigrationsHistory]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [__EFMigrationsHistory] (
+        [MigrationId] nvarchar(150) NOT NULL,
+        [ProductVersion] nvarchar(32) NOT NULL,
+        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+    );
+END;
+
+IF OBJECT_ID(N'[dbo].[QuantityMeasurements]', N'U') IS NOT NULL
+AND NOT EXISTS (
+    SELECT 1
+    FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260323103739_InitialCreate'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260323103739_InitialCreate', N'8.0.0');
+END;
+");
+
     dbContext.Database.Migrate();
 }
 
