@@ -18,12 +18,13 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddPolicy("FrontendPolicy", policy =>
     {
         policy
-            .AllowAnyOrigin()
+            .WithOrigins("https://quantitymeasurementapp-frontend-po29.onrender.com")
             .AllowAnyHeader()
             .AllowAnyMethod();
+            // .AllowCredentials(); // only if you use cookies/credentials
     });
 });
 
@@ -75,7 +76,6 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 app.UseForwardedHeaders();
-app.UseRouting();
 
 // Apply pending migrations on startup so schema stays aligned with the current model.
 using (var scope = app.Services.CreateScope())
@@ -84,7 +84,9 @@ using (var scope = app.Services.CreateScope())
     // dbContext.Database.Migrate();
 }
 
-app.UseCors("AllowFrontend");
+
+app.UseRouting();
+app.UseCors("FrontendPolicy");
 app.UseSwagger();
 app.UseSwaggerUI();
 // Validate incoming bearer tokens before authorization checks.
