@@ -25,7 +25,6 @@ builder.Services.AddCors(options =>
     {
         policy
             .WithOrigins(
-                "https://quantitymeasurementapp-frontend-po29.onrender.com",
                 "https://quantitymeasurementapp-frontend-po29.onrender.com"
             )
             .AllowAnyHeader()
@@ -122,21 +121,10 @@ END;
 // ✅ IMPORTANT: HANDLE RENDER HEADERS
 app.UseForwardedHeaders();
 
-// ✅ HANDLE PREFLIGHT (OPTIONS)
-app.Use(async (context, next) =>
-{
-    if (context.Request.Method == "OPTIONS")
-    {
-        context.Response.StatusCode = 200;
-        return;
-    }
-    await next();
-});
-
-// ✅ APPLY CORS (VERY IMPORTANT POSITION)
-app.UseCors("FrontendPolicy");
-
 app.UseRouting();
+
+// CORS must run before auth and endpoint mapping so preflight responses include headers.
+app.UseCors("FrontendPolicy");
 
 app.UseSwagger();
 app.UseSwaggerUI();
